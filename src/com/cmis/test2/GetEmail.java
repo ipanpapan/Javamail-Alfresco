@@ -28,6 +28,8 @@ public class GetEmail {
 	static IMAPFolder folder = null;
     static Store store = null;
     static String subject = null;
+    static String isiFinal = "";
+    private static boolean textIsHtml = false;
     
     public static void connect () throws MessagingException
     {
@@ -37,7 +39,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "irfan.elfakhar@gmail.com", "lightningreveanant");
+        store.connect("imap.googlemail.com", "email", "password");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
@@ -55,6 +57,67 @@ public class GetEmail {
         seeEmail(messages);
     }
     
+    /**
+     * Return the primary text content of the message.
+     */
+    public static String getText(Part p) throws MessagingException, IOException {
+        if (p.isMimeType("text/*"))
+        {
+            System.out.println("Dia text");
+        	String s = (String)p.getContent();
+        	System.out.println(s);
+        	isiFinal = s;
+            textIsHtml = p.isMimeType("text/html");
+            return s;
+        }
+
+        if (p.isMimeType("multipart/alternative"))
+        {
+        	System.out.println("Dia multialter");
+        	// prefer html text over plain text
+            Multipart mp = (Multipart)p.getContent();
+            String text = null;
+            for (int i = 0; i < mp.getCount(); i++)
+            {
+                Part bp = mp.getBodyPart(i);
+                if (bp.isMimeType("text/plain"))
+                {
+                	System.out.println("Dia textplain");
+                	if (text == null)
+                        text = getText(bp);
+                    continue;
+                } else if (bp.isMimeType("text/html"))
+                {
+                	System.out.println("Dia texthtml");
+                	String s = getText(bp);
+                    if (s != null)
+                    {
+                    	System.out.println(s);
+                        return s;
+                    }
+                } else
+                {
+                    return getText(bp);
+                }
+            }
+            return text;
+        } else if (p.isMimeType("multipart/*"))
+        {
+            Multipart mp = (Multipart)p.getContent();
+            for (int i = 0; i < mp.getCount(); i++)
+            {
+                String s = getText(mp.getBodyPart(i));
+                if (s != null)
+                {
+                	System.out.println(s);
+                    return s;
+                }
+            }
+        }
+
+        return null;
+    }
+    
     public static void seeEmail (Message messages[]) throws MessagingException, IOException
     {
     	EmailDaoImpl haha = new EmailDaoImpl();
@@ -69,21 +132,24 @@ public class GetEmail {
     		MimeBodyPart part = null;
     		List<String> etechment = new ArrayList<String>();
     		
-    		String result = null;
+    		String result = "";    		
             
         	subject = msg.getSubject();
-        	System.out.println(msg.getContent());
+        	//System.out.println(msg.getContent());
         	
         	if (contentType.contains("multipart"))
     		{
-                System.out.println("ini gak ada attachment");
+                //System.out.println("ini gak ada attachment");
         		// content may contain attachments
                 Multipart multiPart = (Multipart) msg.getContent();
                 int numberOfParts = multiPart.getCount();
-                System.out.println("Punya " + numberOfParts + "parts");
+                System.out.println("Punya " + numberOfParts + " parts");
                 for (int partCount = 0; partCount < numberOfParts; partCount++)
                 {
                 	part = (MimeBodyPart) multiPart.getBodyPart(partCount);
+                	if (!textIsHtml)
+                		result = getText(part);
+                	System.out.println("Result part1: " + result);
                     
                     if (part.getDisposition() == null)
                     {
@@ -91,14 +157,14 @@ public class GetEmail {
                     	
                     	if ((part.getContentType().length() >= 10) && part.getContentType().toLowerCase().substring(0, 10).equals("text/plain"))
                     	{
-                    		part.writeTo(System.out);
+                    		//part.writeTo(System.out);
                     	}
                     	else
                     	{
                     		System.out.println("ini masuk");
                     		System.out.println(part.getContent().toString());
                     		System.out.println("Other Body: " + part.getContentType());
-                    		part.writeTo(System.out);
+                    		//part.writeTo(System.out);
                     	}
                     }                    
                     if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition()))
@@ -163,7 +229,9 @@ public class GetEmail {
         	else
         		System.out.println("Contentnya: " + messageContent);
         	
+        	System.out.println(isiFinal);
         	haha.hmm(i, subject, messageContent, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
+        	textIsHtml = false;
         }
     }
     
