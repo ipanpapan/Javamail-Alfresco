@@ -39,7 +39,6 @@ public class CRUDEmail {
 	private static final String REPOSITORY_ID = "-default-";
 	public static int indexEmail = 0;
 	public static int indexFile = 0;
-	public static int indexFolder = 0;
 	
 	static Folder connect() {
 		SessionFactory sessionFactory = SessionFactoryImpl.newInstance();
@@ -57,7 +56,7 @@ public class CRUDEmail {
 		return session.getRootFolder();
 	}
 	
-	public static Document createFile (Folder target, String fileName) throws FileNotFoundException
+	public static Document createFile (Folder target, String fileName) throws FileNotFoundException, CmisContentAlreadyExistsException
 	{
 		File content = new File("D:/Attachment/"+ fileName);
 		Document fail = null;
@@ -79,12 +78,6 @@ public class CRUDEmail {
 			fail = target.createDocument(props, contentStream, VersioningState.MAJOR);
 			indexFile = 0;
 		}
-		catch (CmisContentAlreadyExistsException e)
-		{
-			indexFile++;
-			props.put(PropertyIds.NAME, fileName + " - " + indexFile);
-			fail = target.createDocument(props, contentStream, VersioningState.MAJOR);
-		}
 		catch(CmisBaseException e)
 		{
             System.err.printf("error uploading file: "+ e.getMessage(), e);
@@ -93,39 +86,51 @@ public class CRUDEmail {
 	}
 	
 	public static Folder createFolder(Folder target, String newFolderName) {
+		System.out.println("test5");
+		Folder subFolder = null;
 		Map<String, String> props = new HashMap<String, String>();
 		String result = "";
 		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:folder");
 		if (newFolderName != null)	
 		{
 			result = newFolderName.replaceAll("[\\-\\+\\.\\^:,]","");
+			//props.put(PropertyIds.NAME, result);
 		}			
 		else
 		{
 			String uuid = UUID.randomUUID().toString();
 			result = "Random " + uuid;
-			props.put(PropertyIds.NAME, result);
+//			props.put(PropertyIds.NAME, result);
+		}
+		
+		System.out.println(result);
+		Matcher matcher = Pattern.compile("(Re\\s|Fwd\\s)(.*)").matcher(result);
+		
+		if (matcher.find())
+		{			
+			result = matcher.group(2);
+			System.out.println(result + " dari regex");
 		}
 		
 		try
 		{
-			if (result.matches("(Re |Reply |Bls |Balas |re |reply |bls |balas )?"))
-			{
-				Matcher matcher = Pattern.compile("?<=(Re |Reply |Bls |Balas |re |reply |bls |balas )?.*").matcher(result);
-				matcher.find();
-				result = matcher.group(1);
-			}
 			props.put(PropertyIds.NAME, result);
-			Folder newFolder = target.createFolder(props);
-			indexFolder = 0;
-			return newFolder;
+			if (target.getPath().equals("/"))
+				subFolder = (Folder) session.getObjectByPath(target.getPath() + result);
+			else
+				subFolder = (Folder) session.getObjectByPath("/Email" + "/" + result);
+			System.out.println(subFolder.getPath());
+			System.out.println("Folder already existed!");
 		}
-		catch (CmisContentAlreadyExistsException e)
+		catch (CmisObjectNotFoundException e)
 		{
-			
-			Folder newFolder = (Folder) session.getObjectByPath("/Email/" + result);
-			return newFolder;
+			props.put(PropertyIds.NAME, result);
+			System.out.println(target.getPath());
+			subFolder = target.createFolder(props);
+			String subFolderId = subFolder.getId();
+			System.out.println("Created new folder: " + subFolderId);
 		}
+		return subFolder;
 	}
 	
 	public static void createDocument(Folder target, Email newDocName) {

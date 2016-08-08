@@ -29,7 +29,7 @@ public class GetEmail {
     static Store store = null;
     static String subject = null;
     
-    public static void connect (String _email, String _password) throws MessagingException
+    public static void connect () throws MessagingException
     {
     	Properties props = System.getProperties();
         props.setProperty("mail.store.protocol", "imaps");
@@ -37,15 +37,15 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", _email, _password);
+        store.connect("imap.googlemail.com", "irfan.elfakhar@gmail.com", "lightningreveanant");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
     
-    public static void getAllEmail (String _email, String _password) throws MessagingException, IOException
+    public static void getAllEmail () throws MessagingException, IOException
     {
-    	connect(_email, _password);
-    	folder.open(Folder.READ_ONLY);
+    	connect();
+    	folder.open(Folder.READ_WRITE);
         //folder.open(Folder.READ_WRITE); //kalo READ_WRITE ngebuat yang belom dibaca jadi kebaca
           
         //Message[] messages = folder.getMessages();
@@ -68,17 +68,39 @@ public class GetEmail {
     		String attachFiles = "";
     		MimeBodyPart part = null;
     		List<String> etechment = new ArrayList<String>();
+    		
+    		String result = null;
             
         	subject = msg.getSubject();
+        	System.out.println(msg.getContent());
         	
         	if (contentType.contains("multipart"))
     		{
-                // content may contain attachments
+                System.out.println("ini gak ada attachment");
+        		// content may contain attachments
                 Multipart multiPart = (Multipart) msg.getContent();
-                int numberOfParts = multiPart.getCount();                
+                int numberOfParts = multiPart.getCount();
+                System.out.println("Punya " + numberOfParts + "parts");
                 for (int partCount = 0; partCount < numberOfParts; partCount++)
                 {
-                    part = (MimeBodyPart) multiPart.getBodyPart(partCount);
+                	part = (MimeBodyPart) multiPart.getBodyPart(partCount);
+                    
+                    if (part.getDisposition() == null)
+                    {
+                    	System.out.println("Null: "  + part.getContentType());
+                    	
+                    	if ((part.getContentType().length() >= 10) && part.getContentType().toLowerCase().substring(0, 10).equals("text/plain"))
+                    	{
+                    		part.writeTo(System.out);
+                    	}
+                    	else
+                    	{
+                    		System.out.println("ini masuk");
+                    		System.out.println(part.getContent().toString());
+                    		System.out.println("Other Body: " + part.getContentType());
+                    		part.writeTo(System.out);
+                    	}
+                    }                    
                     if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition()))
                     {
                         // this part is attachment
@@ -86,27 +108,31 @@ public class GetEmail {
                         etechment.add(fileName);
                         //attachFiles += fileName + ", ";
                         part.saveFile("D:/Attachment" + File.separator + fileName);
+                        System.out.println("test1");
                     }
                     else
                     {
                         // this part may be the message content
                         messageContent = part.getContent().toString();
+                        System.out.println(messageContent);
+                        System.out.println("sadasdsad");
                     }
-                }
+                    System.out.println("Nomor Part: " + partCount);
+                    System.out.println("Content: " + part.getContent().toString());
+                }               
 
                 if (attachFiles.length() > 1) {
                     attachFiles = attachFiles.substring(0, attachFiles.length() - 2);
                 }
             } else if (contentType.contains("text/plain")
                     || contentType.contains("text/html")) {
+            	System.out.println("aaaaaa");
                 Object content = msg.getContent();
                 if (content != null) {
                     messageContent = content.toString();
+                    System.out.println("test2");
                 }
             }
-        	
-        	if (messageContent.contains("javax"))
-    			messageContent = "";
         	        		
         	System.out.println("Subject: " + subject);
         	        	
@@ -130,8 +156,12 @@ public class GetEmail {
         		}        		
         	}
 
-        	//System.out.println(toAddresses);
-        	//System.out.println(attachFiles);
+        	System.out.println("Resultnya: " + result);
+        	//System.out.println(messageContent);
+        	if (messageContent.isEmpty())
+        		System.out.println("gak ada isinya");
+        	else
+        		System.out.println("Contentnya: " + messageContent);
         	
         	haha.hmm(i, subject, messageContent, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
         }
