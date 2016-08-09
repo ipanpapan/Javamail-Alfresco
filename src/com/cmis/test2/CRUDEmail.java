@@ -93,7 +93,7 @@ public class CRUDEmail {
 		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:folder");
 		if (newFolderName != null)	
 		{
-			result = newFolderName.replaceAll("[\\-\\+\\.\\^:,]","");
+			result = newFolderName.replaceAll("[\\-\\+\\.\\^:,/]","");
 			//props.put(PropertyIds.NAME, result);
 		}			
 		else
@@ -140,7 +140,7 @@ public class CRUDEmail {
 		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
 		
 		if (newDocName.getSubject() != null)
-			result = newDocName.getSubject().replaceAll("[\\-\\+\\.\\^:,]","");
+			result = newDocName.getSubject().replaceAll("[\\-\\+\\.\\^:,/]","");
 		else
 		{
 			//INI MASIH SALAH COEG
@@ -179,8 +179,15 @@ public class CRUDEmail {
 		ContentStream contentStream = session.getObjectFactory()
 				.createContentStream(result, buf.length,
 						"text/plain", input);
-		props.put(PropertyIds.NAME, "[" +  tanggal + "] " + result);
-		target.createDocument(props, contentStream, VersioningState.MAJOR);
+		props.put(PropertyIds.NAME, "[" +  tanggal + "] " + result);		
+		try
+		{
+			target.createDocument(props, contentStream, VersioningState.MAJOR);
+		}
+		catch (CmisContentAlreadyExistsException e)
+		{
+			System.err.println(e);
+		}
 	}
 	
 	public static void DeleteDocument(Folder target, String delDocName) {

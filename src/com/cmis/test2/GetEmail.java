@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.Flags;
@@ -28,7 +30,7 @@ public class GetEmail {
 	static IMAPFolder folder = null;
     static Store store = null;
     static String subject = null;
-    static String isiFinal = "Belom ada isi";
+    static String isiFinal = "";
     private static boolean textIsHtml = false;
     
     public static void connect () throws MessagingException
@@ -39,7 +41,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "email", "password");
+        store.connect("imap.googlemail.com", "irfan.elfakhar@gmail.com", "lightningreveanant");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
@@ -233,7 +235,11 @@ public class GetEmail {
         	else
         		System.out.println("Contentnya: " + messageContent);
         	
-        	System.out.println(isiFinal);
+        	//System.out.println(isiFinal);
+        	if (isiFinal.contains("Forwarded message"))
+        	{
+        		getForwardMessage(isiFinal);
+        	}
         	haha.hmm(i, subject, isiFinal, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
         	isiFinal = "";
         	textIsHtml = false;
@@ -262,4 +268,45 @@ public class GetEmail {
         
         WaitEmail.startListening(folder);
     }
+    
+    public static void getForwardMessage (String _message)
+    {
+    	Matcher matcher = null;
+    	String result = "";
+    	String from = "";
+    	String date = "";
+    	String subjectForward = "";
+    	String to = "";
+    	String isi = _message;    	    	
+    	
+		System.out.println("_message isinya: " + isi);
+		matcher = Pattern.compile("(?s)[-\\s\\w\\d]*-\\n(.*)").matcher(isi);
+		if (matcher.find())
+		{
+			System.out.println("_message isinya: " + _message);
+			result = matcher.group(1);
+			System.out.println(result + " dari regex");
+		}
+		else
+		{
+			System.out.println("not found");
+		}
+		
+		Matcher matcherFrom = Pattern.compile("(?s)From:[\\s\\w\\d]*<(.*?)>\\nDate:\\s(.*?)\\nSubject:\\s(.*?)\\nTo:[\\s\\w\\d]*<(.*?)>\\n(.*)").matcher(result);
+		
+		if (matcherFrom.find())
+		{
+			from = matcherFrom.group(1);
+			date = matcherFrom.group(2);
+			subjectForward = matcherFrom.group(3);
+			to = matcherFrom.group(4);
+			isi = matcherFrom.group(5);
+			
+			for (int p = 0; p<=5; p++)
+			{
+				System.out.println(matcherFrom.group(p) + " dari regex1");
+			}
+		}
+    	
     }
+}
