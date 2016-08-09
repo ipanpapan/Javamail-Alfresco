@@ -41,7 +41,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "irfan.elfakhar@gmail.com", "lightningreveanant");
+        store.connect("imap.googlemail.com", "email", "password");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
@@ -283,7 +283,7 @@ public class GetEmail {
 		matcher = Pattern.compile("(?s)[-\\s\\w\\d]*-\\n(.*)").matcher(isi);
 		if (matcher.find())
 		{
-			System.out.println("_message isinya: " + _message);
+			System.out.println("_message isinya: " + isi);
 			result = matcher.group(1);
 			System.out.println(result + " dari regex");
 		}
