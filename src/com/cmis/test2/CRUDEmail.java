@@ -178,8 +178,8 @@ public class CRUDEmail {
 		ByteArrayInputStream input = new ByteArrayInputStream(buf);
 		ContentStream contentStream = session.getObjectFactory()
 				.createContentStream(result, buf.length,
-						"text/html", input);
-		props.put(PropertyIds.NAME, "[" +  tanggal + "] " + result + ".html");
+						"text/plain", input);
+		props.put(PropertyIds.NAME, "[" +  tanggal + "] " + result);
 		target.createDocument(props, contentStream, VersioningState.MAJOR);
 	}
 	

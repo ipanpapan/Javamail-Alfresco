@@ -28,7 +28,7 @@ public class GetEmail {
 	static IMAPFolder folder = null;
     static Store store = null;
     static String subject = null;
-    static String isiFinal = "";
+    static String isiFinal = "Belom ada isi";
     private static boolean textIsHtml = false;
     
     public static void connect () throws MessagingException
@@ -39,7 +39,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "email", "password");
+        store.connect("imap.googlemail.com", "irfan.elfakhar@gmail.com", "lightningreveanant");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
@@ -66,8 +66,12 @@ public class GetEmail {
             System.out.println("Dia text");
         	String s = (String)p.getContent();
         	System.out.println(s);
-        	isiFinal = s;
-            textIsHtml = p.isMimeType("text/html");
+        	if (!p.isMimeType("text/html"))
+        	{
+        		isiFinal = s;
+            	System.out.println("Isinya: " + isiFinal);
+                textIsHtml = p.isMimeType("text/html");
+        	}        		
             return s;
         }
 
@@ -230,7 +234,8 @@ public class GetEmail {
         		System.out.println("Contentnya: " + messageContent);
         	
         	System.out.println(isiFinal);
-        	haha.hmm(i, subject, messageContent, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
+        	haha.hmm(i, subject, isiFinal, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
+        	isiFinal = "";
         	textIsHtml = false;
         }
     }
