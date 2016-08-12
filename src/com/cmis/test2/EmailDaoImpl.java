@@ -13,10 +13,16 @@ public class EmailDaoImpl {
 		listEmail = new ArrayList<Email>();
 	}
 	
-	public void hmm(int _id, String _subject, String _content, Date _receivedDate, String _from, List<String> toAddresses, String _to, List<String> etechment) throws FileNotFoundException
+	public void hmm(String _subject, String _content, Date _receivedDate, String _from, List<String> toAddresses, String _to, List<String> etechment) throws FileNotFoundException
 	{		
-		Email emailMasuk = new Email(_id, _subject, _content, _receivedDate, _from, toAddresses, _to, etechment);
+		Email emailMasuk = new Email(_subject, _content, _receivedDate, _from, toAddresses, _to, etechment);
 		listEmail.add(emailMasuk);
+	}
+	
+	public void forward(String _subject, String _content, Date _receivedDate, String _from, String _to, List<String> etechment)
+	{
+		Email emailForward = new Email(_subject, _content, _receivedDate, _from, _to, etechment);
+		listEmail.add(emailForward);
 	}
 	
 	public static ArrayList<Email> getAllEmail()

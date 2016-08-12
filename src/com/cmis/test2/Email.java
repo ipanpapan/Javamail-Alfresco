@@ -3,7 +3,6 @@ import java.util.Date;
 import java.util.List;
 
 public class Email {
-	private int emailID;
 	private String subject;
 	private String content;
 	private Date receivedDate;
@@ -12,9 +11,8 @@ public class Email {
 	private List<String> cc;
 	private List<String> attached;
 	
-	public Email (int _id, String _subject, String _content, Date _receivedDate, String _from, List<String> toAddresses, String _to, List<String> etechment)
+	public Email (String _subject, String _content, Date _receivedDate, String _from, List<String> toAddresses, String _to, List<String> etechment)
 	{
-		this.emailID = _id;
 		this.subject = _subject;
 		this.content = _content;
 		this.receivedDate = _receivedDate;
@@ -24,10 +22,16 @@ public class Email {
 		this.attached = etechment;
 	}
 	
-	public int getEmailID ()
+	public Email (String _subject, String _content, Date _receivedDate, String _from, String _to, List<String> etechment)
 	{
-		return this.emailID;
+		this.subject = _subject;
+		this.content = _content;
+		this.receivedDate = _receivedDate;
+		this.from = _from;
+		this.to = _to;
+		this.attached = etechment;
 	}
+	
 	public String getSubject ()
 	{
 		return this.subject;

@@ -5,9 +5,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Date;
+
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import javax.mail.Address;
 import javax.mail.Flags;
@@ -31,6 +36,7 @@ public class GetEmail {
     static Store store = null;
     static String subject = null;
     static String isiFinal = "";
+    static EmailDaoImpl haha;
     private static boolean textIsHtml = false;
     
     public static void connect () throws MessagingException
@@ -41,7 +47,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "email", "password");
+        store.connect("imap.googlemail.com", "irfan.elfakhar@gmail.com", "lightningreveanant");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
@@ -71,7 +77,7 @@ public class GetEmail {
         	if (!p.isMimeType("text/html"))
         	{
         		isiFinal = s;
-            	System.out.println("Isinya: " + isiFinal);
+//            	System.out.println("Isinya: " + isiFinal);
                 textIsHtml = p.isMimeType("text/html");
         	}        		
             return s;
@@ -126,7 +132,7 @@ public class GetEmail {
     
     public static void seeEmail (Message messages[]) throws MessagingException, IOException
     {
-    	EmailDaoImpl haha = new EmailDaoImpl();
+    	haha = new EmailDaoImpl();
     	for (int i=0; i < messages.length;i++) 
         {
         	System.out.println("*****************************************************************************");
@@ -235,12 +241,14 @@ public class GetEmail {
         	else
         		System.out.println("Contentnya: " + messageContent);
         	
+        	haha.hmm(subject, isiFinal, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
+        	
         	//System.out.println(isiFinal);
-        	if (isiFinal.contains("Forwarded message"))
+        	if (isiFinal.contains("Forwarded message") || isiFinal.contains("Pesan terusan") || isiFinal.contains("From"))
         	{
         		getForwardMessage(isiFinal);
         	}
-        	haha.hmm(i, subject, isiFinal, msg.getReceivedDate(), email, toAddresses, recipient, etechment);
+        	
         	isiFinal = "";
         	textIsHtml = false;
         }
@@ -269,44 +277,82 @@ public class GetEmail {
         WaitEmail.startListening(folder);
     }
     
+    static int index = 0;
     public static void getForwardMessage (String _message)
     {
-    	Matcher matcher = null;
     	String result = "";
     	String from = "";
     	String date = "";
     	String subjectForward = "";
     	String to = "";
-    	String isi = _message;    	    	
+    	String isi = _message;
+    	Date tanggal = null;
     	
 		System.out.println("_message isinya: " + isi);
-		matcher = Pattern.compile("(?s)[-\\s\\w\\d]*-\\n(.*)").matcher(isi);
-		if (matcher.find())
+		//String output = isi.replace("\r\n", "\\r\\n");
+		//System.out.println(output);
+		while (isi.contains("Forwarded message"))
 		{
-			System.out.println("_message isinya: " + isi);
-			result = matcher.group(1);
-			System.out.println(result + " dari regex");
-		}
-		else
-		{
-			System.out.println("not found");
-		}
-		
-		Matcher matcherFrom = Pattern.compile("(?s)From:[\\s\\w\\d]*<(.*?)>\\nDate:\\s(.*?)\\nSubject:\\s(.*?)\\nTo:[\\s\\w\\d]*<(.*?)>\\n(.*)").matcher(result);
-		
-		if (matcherFrom.find())
-		{
-			from = matcherFrom.group(1);
-			date = matcherFrom.group(2);
-			subjectForward = matcherFrom.group(3);
-			to = matcherFrom.group(4);
-			isi = matcherFrom.group(5);
-			
-			for (int p = 0; p<=5; p++)
+			Matcher matcher = Pattern.compile("(?s)[-\\s\\w\\d]*-\\r\\n(.*)").matcher(isi);
+			List<String> etechment = new ArrayList<String>();
+			if (matcher.find())
 			{
-				System.out.println(matcherFrom.group(p) + " dari regex1");
+				System.out.println("_message isinya: " + isi);
+				result = matcher.group(1);
+				System.out.println(result + " dari regex");
 			}
+			else
+			{
+				System.out.println("not found");
+			}
+			
+			Matcher matcherFrom = Pattern.compile("(?s).*?<(.*?)>\\r\\n.*?:.(.*?)\\r\\n.*?:.(.*?)\\r\\n.*?\\s(.*?|<.*>)\\r\\n(.*)").matcher(result);
+			
+			if (matcherFrom.find())
+			{
+				from = matcherFrom.group(1);
+				date = matcherFrom.group(2);
+				subjectForward = matcherFrom.group(3);
+				to = matcherFrom.group(4);
+				isi = matcherFrom.group(5);
+				
+				try
+				{
+					SimpleDateFormat formatter = new SimpleDateFormat("EEE, MMM dd, yyyy 'at' HH:mm a", Locale.US);				
+					tanggal = formatter.parse(date);
+				}
+				catch (ParseException e)
+				{
+					try
+					{
+						SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd HH:mm z", Locale.US);
+						tanggal = formatter.parse(date);
+					}
+					catch (ParseException pe)
+					{
+						pe.printStackTrace();
+					}
+					
+				}
+				
+				haha.forward(subjectForward, isi, tanggal, from, to, etechment);
+				
+				for (int p = 1; p<=5; p++)
+				{
+					if (p==5)
+					{
+						System.out.println(matcherFrom.group(p) + " isi terahir");
+					}
+					else
+						System.out.println(matcherFrom.group(p) + " dari regex1");
+				}
+			}
+			else
+			{
+				System.out.println("not found 2");
+			}
+			index++;
+			System.out.println(index);
 		}
-    	
     }
 }

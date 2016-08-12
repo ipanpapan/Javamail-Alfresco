@@ -28,6 +28,8 @@ public class MainEmail {
 	{
 		for (Email test : EmailDaoImpl.getAllEmail())
 		{
+			System.out.println("mulaaii");
+			System.out.println("isi list: " + EmailDaoImpl.getAllEmail().size());
 			String path = newFolder.getPath();
 			System.out.println(path);
 			Folder insideFolder = CRUDEmail.createFolder(newFolder, test.getSubject());
@@ -40,25 +42,7 @@ public class MainEmail {
 					CRUDEmail.createFile(insideFolder, asd);
 				}
 			}
-		}
-	}
-	
-	public static void pushToAlfrescoFirst () throws FileNotFoundException
-	{
-		for (Email test : EmailDaoImpl.getAllEmail())
-		{
-			String path = newFolder.getPath();
-			System.out.println(path);
-			Folder insideFolder = CRUDEmail.createFolder(newFolder, test.getSubject());
-			System.out.println("test4");
-			CRUDEmail.createDocument(insideFolder, test);
-			if (test.getAttached().size() > 0)
-			{
-				for (String asd : test.getAttached())
-				{
-					CRUDEmail.createFile(insideFolder, asd);
-				}
-			}
+			System.out.println("lanjuut");
 		}
 	}
 }

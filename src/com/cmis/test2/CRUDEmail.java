@@ -82,6 +82,7 @@ public class CRUDEmail {
 		{
             System.err.printf("error uploading file: "+ e.getMessage(), e);
         }
+				
 		return fail;
 	}
 	
@@ -93,7 +94,7 @@ public class CRUDEmail {
 		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:folder");
 		if (newFolderName != null)	
 		{
-			result = newFolderName.replaceAll("[\\-\\+\\.\\^:,/]","");
+			result = newFolderName.replaceAll("[\\-\\+\\.\\^,:/]","");
 			//props.put(PropertyIds.NAME, result);
 		}			
 		else
@@ -104,7 +105,7 @@ public class CRUDEmail {
 		}
 		
 		System.out.println(result);
-		Matcher matcher = Pattern.compile("(Re\\s|Fwd\\s)(.*)").matcher(result);
+		Matcher matcher = Pattern.compile("(Re\\s|Fwd\\s|Bls\\s|Trs\\s|RE\\s)(.*)").matcher(result);
 		
 		if (matcher.find())
 		{			
@@ -125,7 +126,7 @@ public class CRUDEmail {
 		catch (CmisObjectNotFoundException e)
 		{
 			props.put(PropertyIds.NAME, result);
-			System.out.println(target.getPath());
+			System.out.println("target: " + target.getPath());
 			subFolder = target.createFolder(props);
 			String subFolderId = subFolder.getId();
 			System.out.println("Created new folder: " + subFolderId);
@@ -133,14 +134,16 @@ public class CRUDEmail {
 		return subFolder;
 	}
 	
-	public static void createDocument(Folder target, Email newDocName) {
+	public static void createDocument(Folder target, Email newDocName) throws CmisContentAlreadyExistsException {
 		Map<String, Object> props = new HashMap<String, Object>();
 		String result = "null";
 		String tanggal;
 		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
 		
 		if (newDocName.getSubject() != null)
+		{
 			result = newDocName.getSubject().replaceAll("[\\-\\+\\.\\^:,/]","");
+		}
 		else
 		{
 			//INI MASIH SALAH COEG
@@ -169,6 +172,7 @@ public class CRUDEmail {
 //		props.put("cm:Subject", "asdasd");
 		System.out.println("This is a test document: " + newDocName.getSubject());
 		String content = newDocName.getContent();
+		System.out.println("Isi content: " + content);
 		byte[] buf = null;
 		try {
 			buf = content.getBytes("UTF-8");
@@ -183,11 +187,12 @@ public class CRUDEmail {
 		try
 		{
 			target.createDocument(props, contentStream, VersioningState.MAJOR);
+			System.out.println("berhasil dibuat");
 		}
-		catch (CmisContentAlreadyExistsException e)
+		catch(CmisBaseException e)
 		{
-			System.err.println(e);
-		}
+            System.err.printf(e.getMessage(), e);
+        }
 	}
 	
 	public static void DeleteDocument(Folder target, String delDocName) {
