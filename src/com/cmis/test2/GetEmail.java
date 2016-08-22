@@ -47,7 +47,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "email", "password");
+        store.connect("imap.googlemail.com", "username", "password");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }
@@ -159,26 +159,15 @@ public class GetEmail {
                 for (int partCount = 0; partCount < numberOfParts; partCount++)
                 {
                 	part = (MimeBodyPart) multiPart.getBodyPart(partCount);
-                	if (!textIsHtml)
-                		result = getText(part);
-                	System.out.println("Result part1: " + result);
+                	System.out.println("Dispositionnya: " + part.getDisposition());
                     
                     if (part.getDisposition() == null)
                     {
-                    	System.out.println("Null: "  + part.getContentType());
-                    	
-                    	if ((part.getContentType().length() >= 10) && part.getContentType().toLowerCase().substring(0, 10).equals("text/plain"))
-                    	{
-                    		//part.writeTo(System.out);
-                    	}
-                    	else
-                    	{
-                    		System.out.println("ini masuk");
-                    		System.out.println(part.getContent().toString());
-                    		System.out.println("Other Body: " + part.getContentType());
-                    		//part.writeTo(System.out);
-                    	}
-                    }                    
+                    	if (!textIsHtml)
+                    		result = getText(part);
+                    	System.out.println("Result part1: " + result);
+                    }
+                    
                     if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition()))
                     {
                         // this part is attachment

@@ -94,7 +94,7 @@ public class CRUDEmail {
 		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:folder");
 		if (newFolderName != null)	
 		{
-			result = newFolderName.replaceAll("[\\-\\+\\.\\^,:/]","");
+			result = newFolderName.replaceAll("[\\-\\+\\.\\^,:/?]","");
 			//props.put(PropertyIds.NAME, result);
 		}			
 		else
@@ -142,7 +142,7 @@ public class CRUDEmail {
 		
 		if (newDocName.getSubject() != null)
 		{
-			result = newDocName.getSubject().replaceAll("[\\-\\+\\.\\^:,/]","");
+			result = newDocName.getSubject().replaceAll("[\\-\\+\\.\\^:,/?]","");
 		}
 		else
 		{
@@ -156,7 +156,7 @@ public class CRUDEmail {
 		//props.put(PropertyIds.NAME, result + " - " + index);
 		
 		ArrayList<String> secIds = new ArrayList<String>();
-//		secIds.add("P:cm:titled");
+		secIds.add("P:cb:statusable");
 		secIds.add("P:cm:emailed");
 		//secIds.add("P:cm:attachable");
 		props.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secIds);
@@ -167,6 +167,7 @@ public class CRUDEmail {
 		props.put("cm:originator", newDocName.getFrom());
 		props.put("cm:addressee", newDocName.getTo());
 		props.put("cm:addressees", newDocName.getCC());
+		props.put("cb:statuses", "Pending");
 		
 		//props.put("cmis:secondaryObjectTypeIds", "P:cm:titled");
 //		props.put("cm:Subject", "asdasd");
