@@ -47,7 +47,7 @@ public class GetEmail {
         Session session = Session.getDefaultInstance(props, null);
 
         store = session.getStore("imaps");
-        store.connect("imap.googlemail.com", "username", "password");
+        store.connect("imap.googlemail.com", "email", "password");
 
         folder = (IMAPFolder) store.getFolder("inbox");
     }

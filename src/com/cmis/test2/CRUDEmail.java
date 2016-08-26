@@ -37,6 +37,7 @@ public class CRUDEmail {
 	private static Session session;
 	private static final String ALFRSCO_ATOMPUB_URL = "http://localhost:8080/alfresco/api/-default-/public/cmis/versions/1.1/atom";
 	private static final String REPOSITORY_ID = "-default-";
+	private static Document targetAttachment = null;
 	public static int indexEmail = 0;
 	public static int indexFile = 0;
 	
@@ -56,7 +57,7 @@ public class CRUDEmail {
 		return session.getRootFolder();
 	}
 	
-	public static Document createFile (Folder target, String fileName) throws FileNotFoundException, CmisContentAlreadyExistsException
+	public static void createFile (Folder target, String fileName) throws FileNotFoundException, CmisContentAlreadyExistsException
 	{
 		File content = new File("D:/Attachment/"+ fileName);
 		Document fail = null;
@@ -82,8 +83,22 @@ public class CRUDEmail {
 		{
             System.err.printf("error uploading file: "+ e.getMessage(), e);
         }
-				
-		return fail;
+		
+		//masukin relationship
+		Map <String, String> properties = new HashMap<String, String>();
+		properties.put(PropertyIds.OBJECT_TYPE_ID, "R:cb:attachment");
+		properties.put(PropertyIds.SOURCE_ID, targetAttachment.getId());
+		properties.put(PropertyIds.TARGET_ID, fail.getId());
+		session.createRelationship(properties);
+		
+//		try
+//		{
+//			session.createRelationship(properties);
+//		}
+//		catch (Exception e)
+//		{
+//    		System.out.println("Oops, something unexpected happened. Maybe the rel already exists?");
+//    	}
 	}
 	
 	public static Folder createFolder(Folder target, String newFolderName) {
@@ -138,7 +153,7 @@ public class CRUDEmail {
 		Map<String, Object> props = new HashMap<String, Object>();
 		String result = "null";
 		String tanggal;
-		props.put(PropertyIds.OBJECT_TYPE_ID, "cmis:document");
+		props.put(PropertyIds.OBJECT_TYPE_ID, "D:cb:email");
 		
 		if (newDocName.getSubject() != null)
 		{
@@ -156,18 +171,22 @@ public class CRUDEmail {
 		//props.put(PropertyIds.NAME, result + " - " + index);
 		
 		ArrayList<String> secIds = new ArrayList<String>();
-		secIds.add("P:cb:statusable");
-		secIds.add("P:cm:emailed");
+		secIds.add("P:cb:emailable");
+		//secIds.add("P:cm:emailed");
 		//secIds.add("P:cm:attachable");
 		props.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secIds);
 //		
 //		props.put("cm:title", newDocName.getSubject());
-		props.put("cm:subjectline", newDocName.getSubject());
-		props.put("cm:sentdate", newDocName.getDate());
-		props.put("cm:originator", newDocName.getFrom());
-		props.put("cm:addressee", newDocName.getTo());
-		props.put("cm:addressees", newDocName.getCC());
-		props.put("cb:statuses", "Pending");
+//		props.put("cm:subjectline", newDocName.getSubject());
+		props.put("cb:subject", newDocName.getSubject());
+//		props.put("cm:sentdate", newDocName.getDate());
+		props.put("cb:receivedDate", newDocName.getDate());
+//		props.put("cm:originator", newDocName.getFrom());
+		props.put("cb:from", newDocName.getFrom());
+//		props.put("cm:addressee", newDocName.getTo());
+//		props.put("cm:addressees", newDocName.getCC());
+		props.put("cb:to", newDocName.getTo() + ", " + newDocName.getCC());
+//		props.put("cb:statuses", "Pending");
 		
 		//props.put("cmis:secondaryObjectTypeIds", "P:cm:titled");
 //		props.put("cm:Subject", "asdasd");
@@ -184,10 +203,11 @@ public class CRUDEmail {
 		ContentStream contentStream = session.getObjectFactory()
 				.createContentStream(result, buf.length,
 						"text/plain", input);
-		props.put(PropertyIds.NAME, "[" +  tanggal + "] " + result);		
+		props.put(PropertyIds.NAME, "[" +  tanggal + "] " + result);
+		
 		try
 		{
-			target.createDocument(props, contentStream, VersioningState.MAJOR);
+			targetAttachment = target.createDocument(props, contentStream, VersioningState.MAJOR);
 			System.out.println("berhasil dibuat");
 		}
 		catch(CmisBaseException e)
